@@ -11,7 +11,7 @@ class SongsHandler {
   }
 
   async addSongHandler(req, h) {
-    this._validator.validateSongsPayload(req.payload);
+    this._validator.validateSongPayload(req.payload);
     const {
       title,
       year,
@@ -66,7 +66,7 @@ class SongsHandler {
   }
 
   async editSongByIdHandler(req) {
-    this._validator.validateSongsPayload(req.payload);
+    this._validator.validateSongPayload(req.payload);
     const { id } = req.params;
 
     await this._service.editSongById(id, req.payload);

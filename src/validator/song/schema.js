@@ -9,4 +9,4 @@ const SongSchema = Joi.object({
     albumId: Joi.string(),
 })
 
-module.exports = SongSchema 
+module.exports = { SongSchema } 
