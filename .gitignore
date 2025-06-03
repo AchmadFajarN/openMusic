@@ -1,3 +1,7 @@
-node_modules
+# dependencies
+node_modules/
 
+# optional
 .env
+.production.env
+dist/
