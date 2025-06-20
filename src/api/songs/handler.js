@@ -12,14 +12,7 @@ class SongsHandler {
 
   async addSongHandler(req, h) {
     this._validator.validateSongPayload(req.payload);
-    const {
-      title,
-      year,
-      genre,
-      performer,
-      duration,
-      albumId,
-    } = req.payload;
+    const { title, year, genre, performer, duration, albumId } = req.payload;
 
     const songId = await this._service.addSong({
       title,
@@ -41,8 +34,16 @@ class SongsHandler {
     return response;
   }
 
-  async getAllSongsHandler() {
-    const songs = await this._service.getAllSongs();
+  async getAllSongsHandler(req) {
+    const { title } = req.query;
+    const { performer } = req.query;
+
+    let songs;
+    if (title !== undefined || performer !== undefined) {
+      songs = await this._service.getSongsDetail(title, performer);
+    } else {
+      songs = await this._service.getAllSongs();
+    }
 
     return {
       status: "success",
