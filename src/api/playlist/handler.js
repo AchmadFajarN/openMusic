@@ -45,15 +45,21 @@ class PlaylistHandler {
   }
 
   async getPlaylistHandler(req) {
-    const { id: credentialId } = req.auth.credentials;
-    const playlists = await this._service.getAllPlaylist(credentialId);
-
-    return {
-      status: "success",
-      data: {
-        playlists,
-      },
-    };
+    try {
+      const { id: credentialId } = req.auth.credentials;
+      
+      const playlists = await this._service.getAllPlaylist(credentialId);
+  
+      return {
+        status: "success",
+        data: {
+          playlists,
+        },
+      };
+    } catch(err) {
+      console.log(err)
+      throw err
+    }
   }
 
   async deletePlaylistHandler(req, h) {
