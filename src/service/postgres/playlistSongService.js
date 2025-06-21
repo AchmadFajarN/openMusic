@@ -4,11 +4,12 @@ const InvariantError = require("../../exeptions/InvariantError");
 const NotFoundError = require("../../exeptions/NotFoundError");
 
 class PlaylistSongService {
-  constructor() {
+  constructor(activityService) {
+    this._activityService = activityService;
     this._pool = new Pool();
   }
 
-  async addSongToPlaylist(playlistId, songId) {
+  async addSongToPlaylist(playlistId, songId, userId) {
     const id = `playlistSong-${nanoid(16)}`;
     const query = {
       text: "INSERT INTO playlist_songs VALUES($1, $2, $3) RETURNING id",
@@ -20,6 +21,13 @@ class PlaylistSongService {
     if (!result.rows.length) {
       throw new InvariantError("Lagu gagal ditambahkan");
     }
+
+    await this._activityService.addPlaylistActivity(
+      playlistId,
+      songId,
+      userId,
+      "add"
+    );
 
     return result.rows[0].id;
   }
@@ -38,7 +46,7 @@ class PlaylistSongService {
     return result.rows;
   }
 
-  async deleteSongPlaylistById(playlistId, songId) {
+  async deleteSongPlaylistById(playlistId, songId, userId) {
     const query = {
       text: "DELETE FROM playlist_songs WHERE playlist_id = $1 AND song_id = $2 RETURNING id",
       values: [playlistId, songId],
@@ -49,6 +57,13 @@ class PlaylistSongService {
     if (!result.rows.length) {
       throw new NotFoundError("Lagu tidak ditemukan dalam playlist");
     }
+
+    await this._activityService.addPlaylistActivity(
+      playlistId,
+      songId,
+      userId,
+      "delete"
+    );
   }
 
   async verifySongExist(songId) {
