@@ -1,3 +1,5 @@
+const NotFoundError = require("../../exeptions/NotFoundError");
+
 class AlbumsHandler {
   constructor(service, validator) {
     this._service = service;
@@ -27,15 +29,31 @@ class AlbumsHandler {
   }
 
   async getAlbumByIdHandler(req) {
-    const { id } = req.params;
-    const album = await this._service.getAlbumById(id);
+    try {
+      const { id } = req.params;
+      const album = await this._service.getAlbumById(id);
 
-    return {
-      status: "success",
-      data: {
-        album,
-      },
-    };
+      return {
+        status: "success",
+        data: {
+          album: {
+            id: album.id,
+            name: album.name,
+            year: album.year,
+            coverUrl: album.url ? album.url : null,
+          },
+        },
+      };
+    } catch (err) {
+      if (!err instanceof NotFoundError) {
+        return h
+          .response({
+            status: "fail",
+            message: "Terjadi kesalahan di server kami",
+          })
+          .code(500);
+      }
+    }
   }
 
   async putAlbumByIdHandler(req) {
