@@ -1,10 +1,10 @@
 const { Pool } = require("pg");
 const { nanoid } = require("nanoid");
-const NotFoundError = require("../../exeptions/NotFoundError");
 
 class LikeService {
-  constructor() {
+  constructor(cacheService) {
     this._pool = new Pool();
+    this._cacheService = cacheService;
   }
 
   async addLike(albumId, userId) {
@@ -14,6 +14,8 @@ class LikeService {
       values: [id, albumId, userId],
     };
 
+    await this._cacheService.delete(`likes-${albumId}`);
+
     return await this._pool.query(query);
   }
 
@@ -22,6 +24,8 @@ class LikeService {
       text: `DELETE FROM likes WHERE user_id = $1 AND album_id = $2`,
       values: [userId, albumId],
     };
+
+    await this._cacheService.delete(`likes-${albumId}`);
 
     return await this._pool.query(query);
   }
@@ -33,7 +37,11 @@ class LikeService {
     };
 
     const result = await this._pool.query(query);
-    return result.rows.length;
+    const likes = result.rows.length;
+
+    await this._cacheService.set(`likes-${albumId}`, likes);
+
+    return likes;
   }
 }
 

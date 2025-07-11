@@ -29,7 +29,6 @@ class AlbumsHandler {
   }
 
   async getAlbumByIdHandler(req) {
-    try {
       const { id } = req.params;
       const album = await this._service.getAlbumById(id);
 
@@ -41,18 +40,9 @@ class AlbumsHandler {
             name: album.name,
             year: album.year,
             coverUrl: album.url ? album.url : null,
+            songs: album.songs
           },
         },
-      };
-    } catch (err) {
-      if (!err instanceof NotFoundError) {
-        return h
-          .response({
-            status: "fail",
-            message: "Terjadi kesalahan di server kami",
-          })
-          .code(500);
-      }
     }
   }
 

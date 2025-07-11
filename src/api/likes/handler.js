@@ -1,8 +1,9 @@
 const NotFoundError = require("../../exeptions/NotFoundError");
 
 class LikeHandler {
-  constructor(service) {
+  constructor(service, cacheService) {
     this._service = service;
+    this._cacheService = cacheService;
 
     this.postLikeHandler = this.postLikeHandler.bind(this);
     this.deleteLikeHandler = this.deleteLikeHandler.bind(this);
@@ -15,6 +16,7 @@ class LikeHandler {
       const { id: userId } = req.auth.credentials;
 
       await this._service.addLike(albumId, userId);
+      await this._cacheService.delete(`likes-${albumId}`);
 
       const response = h.response({
         status: "success",
@@ -46,6 +48,7 @@ class LikeHandler {
       const { id: userId } = req.auth.credentials;
 
       await this._service.deleteLikes(albumId, userId);
+      await this._cacheService.delete(`likes-${albumId}`);
 
       const response = h.response({
         status: "success",
@@ -62,17 +65,32 @@ class LikeHandler {
   async getLikeHandler(req, h) {
     const { id: albumId } = req.params;
 
-    const likes = await this._service.getLikes(albumId);
+    try {
+      const cachedLikes = await this._cacheService.get(`likes-${albumId}`);
 
-    const response = h.response({
-      status: "success",
-      data: {
-        likes,
-      },
-    });
+      const response = h.response({
+        status: "success",
+        data: {
+          likes: parseInt(cachedLikes),
+        },
+      });
 
-    response.code(200);
-    return response;
+      response.header("X-Data-Source", "cache");
+      return response;
+    } catch (err) {
+      const likes = await this._service.getLikes(albumId);
+
+      await this._cacheService.set(`likes-${albumId}`, likes);
+
+      const response = h.response({
+        status: "success",
+        data: {
+          likes
+        }
+      });
+
+      return response;
+    }
   }
 }
 
